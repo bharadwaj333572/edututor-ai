@@ -1,19 +1,29 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { aiQuizGenerator } from "@/lib/ai-quiz-generator"
+import { type NextRequest, NextResponse } from "next/server";
+import { aiQuizGenerator } from "@/lib/ai-quiz-generator";
 
 export async function POST(request: NextRequest) {
   try {
-    const { topic, difficulty, questionCount } = await request.json()
+    const { topic, difficulty, questionCount } = await request.json();
 
-    if (!topic || !difficulty) {
-      return NextResponse.json({ error: "Topic and difficulty are required" }, { status: 400 })
+    // Input validation
+    if (!topic || typeof topic !== "string") {
+      return NextResponse.json({ error: "Invalid or missing topic." }, { status: 400 });
     }
+
+    if (!difficulty || typeof difficulty !== "string") {
+      return NextResponse.json({ error: "Invalid or missing difficulty." }, { status: 400 });
+    }
+
+    const count = Number(questionCount) > 0 ? Number(questionCount) : 5;
+
+    // Simulate processing delay for UX feedback
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const questions = await aiQuizGenerator.generateQuiz({
       topic,
       difficulty,
-      questionCount: questionCount || 5,
-    })
+      questionCount: count,
+    });
 
     return NextResponse.json({
       success: true,
@@ -23,10 +33,15 @@ export async function POST(request: NextRequest) {
         difficulty,
         questionCount: questions.length,
         generatedAt: new Date().toISOString(),
+        engine: "AI Quiz Generator v1.0",
+        uniqueConcepts: [...new Set(questions.map(q => q.concept || topic))].length,
       },
-    })
+    });
   } catch (error) {
-    console.error("Error generating quiz:", error)
-    return NextResponse.json({ error: "Failed to generate quiz" }, { status: 500 })
+    console.error("Error generating quiz:", error);
+    return NextResponse.json(
+      { error: "An error occurred while generating the quiz." },
+      { status: 500 }
+    );
   }
 }

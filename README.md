@@ -35,7 +35,7 @@ This project was developed as part of the **SmartInternz "Generative AI with IBM
 
 ## 📹 Demo Video
 
-[Click here to watch the demo video](https://drive.google.com/file/d/17hPAl9_O368-lNvAsQW_3JBmxL7JBrMa/view?usp=sharing)
+[Click here to watch the demo video](https://drive.google.com/file/d/1Ics1n8dqzRCTGsuH1hy9_HvCsI5G04Nv/view?usp=sharing)
 
 Or check inside `outputs/video_link.txt`.
 

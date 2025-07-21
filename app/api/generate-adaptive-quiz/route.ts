@@ -1,38 +1,57 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { watsonxService } from "@/lib/watsonx-service"
-import { pineconeService } from "@/lib/pinecone-service"
+import { type NextRequest, NextResponse } from "next/server";
+import { watsonxService } from "@/lib/watsonx-service";
+import { pineconeService } from "@/lib/pinecone-service";
 
 export async function POST(request: NextRequest) {
   try {
-    const { studentId, topic, difficulty, questionCount, courseContext } = await request.json()
+    const body = await request.json();
+    const { studentId, topic, difficulty, questionCount, courseContext } = body;
 
-    // Get student insights from Pinecone
-    const insights = await pineconeService.getStudentInsights(studentId)
+    // Validate input
+    if (!studentId || !topic || !difficulty || !questionCount) {
+      return NextResponse.json(
+        { error: "Missing required fields in the request body." },
+        { status: 400 }
+      );
+    }
 
-    // Get previous performance data
-    const previousPerformance = insights ? Object.values(insights.topicScores || {}) : []
+    // 1. Get student insights from Pinecone vector DB
+    const insights = await pineconeService.getStudentInsights(studentId);
 
-    // Generate adaptive quiz using Watsonx
+    // 2. Extract performance data for adaptive quiz generation
+    const previousPerformance = insights?.topicScores
+      ? Object.values(insights.topicScores)
+      : [];
+
+    const recommendedDifficulty = insights?.difficultyLevel || difficulty;
+    const studentLevel = insights?.difficultyLevel || "intermediate";
+
+    // 3. Generate adaptive quiz using Watsonx
     const questions = await watsonxService.generateQuiz({
       topic,
-      difficulty: (insights?.difficultyLevel as any) || difficulty,
+      difficulty: recommendedDifficulty,
       questionCount,
-      studentLevel: insights?.difficultyLevel || "intermediate",
+      studentLevel,
       previousPerformance,
-      courseContext,
-    })
+      courseContext: courseContext || "", // fallback if not provided
+    });
 
     return NextResponse.json({
       success: true,
       questions,
       adaptiveInfo: {
-        recommendedDifficulty: insights?.difficultyLevel || difficulty,
+        recommendedDifficulty,
         focusAreas: insights?.weakAreas || [],
         studentStrengths: insights?.strongAreas || [],
       },
-    })
+    });
   } catch (error) {
-    console.error("Error generating adaptive quiz:", error)
-    return NextResponse.json({ error: "Failed to generate adaptive quiz" }, { status: 500 })
+    console.error("[Adaptive Quiz Error]", error);
+    return NextResponse.json(
+      { error: "Failed to generate adaptive quiz. Please try again." },
+      { status: 500 }
+    );
   }
 }
+
+    

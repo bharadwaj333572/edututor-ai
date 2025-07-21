@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
 import { EduTutorLogo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { CheckCircle, XCircle, Loader2, ArrowLeft, ExternalLink } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, ArrowLeft, ExternalLink, KeyRound } from "lucide-react"
 import Link from "next/link"
 
 interface ServiceStatus {
@@ -24,42 +25,31 @@ export default function SetupPage() {
   ])
 
   const testWatsonx = async () => {
-    setServices((prev) =>
-      prev.map((service) =>
-        service.name === "IBM Watsonx" ? { ...service, status: "checking", message: "Testing connection..." } : service,
-      ),
-    )
+    updateServiceStatus("IBM Watsonx", "checking", "Testing connection...")
 
     try {
       const response = await fetch("/api/test-watsonx")
       const data = await response.json()
 
       if (data.success) {
-        setServices((prev) =>
-          prev.map((service) =>
-            service.name === "IBM Watsonx"
-              ? { ...service, status: "connected", message: "Successfully connected and generated test questions!" }
-              : service,
-          ),
-        )
+        updateServiceStatus("IBM Watsonx", "connected", "Successfully connected and generated test questions!")
       } else {
-        setServices((prev) =>
-          prev.map((service) =>
-            service.name === "IBM Watsonx"
-              ? { ...service, status: "error", message: data.message || "Connection failed" }
-              : service,
-          ),
-        )
+        updateServiceStatus("IBM Watsonx", "error", data.message || "Connection failed")
       }
-    } catch (error) {
-      setServices((prev) =>
-        prev.map((service) =>
-          service.name === "IBM Watsonx"
-            ? { ...service, status: "error", message: "Failed to test connection" }
-            : service,
-        ),
-      )
+    } catch {
+      updateServiceStatus("IBM Watsonx", "error", "Failed to test connection")
     }
+  }
+
+  const updateServiceStatus = (name: string, status: ServiceStatus["status"], message: string) => {
+    setServices((prev) =>
+      prev.map((service) => (service.name === name ? { ...service, status, message } : service))
+    )
+  }
+
+  const testAll = () => {
+    testWatsonx()
+    // Add Pinecone + Google Classroom test handlers here when ready
   }
 
   const getStatusIcon = (status: ServiceStatus["status"]) => {
@@ -90,6 +80,7 @@ export default function SetupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Header */}
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
@@ -114,32 +105,33 @@ export default function SetupPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4">EduTutor AI Setup</h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Configure your AI services to get the most out of EduTutor AI
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">Configure and test AI services to get started.</p>
           </div>
 
-          {/* API Key Configuration */}
-          <Card className="mb-8">
+          {/* API Key Info */}
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>API Key Configuration</CardTitle>
-              <CardDescription>Your IBM Watsonx API key has been configured</CardDescription>
+              <CardTitle>API Keys</CardTitle>
+              <CardDescription>Manage your keys securely</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  IBM Watsonx API key is configured. Click "Test Connection" below to verify it's working.
-                </AlertDescription>
-              </Alert>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <KeyRound className="text-blue-500" />
+                <Input placeholder="IBM Watsonx API Key (configured)" disabled />
+                <Button variant="outline" size="sm">Update Key</Button>
+              </div>
+              {/* Add inputs for Pinecone or Google Classroom here if needed */}
             </CardContent>
           </Card>
 
-          {/* Service Status */}
+          {/* Service Testing */}
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Service Status</CardTitle>
-              <CardDescription>Check the status of your integrated services</CardDescription>
+            <CardHeader className="flex justify-between items-center">
+              <div>
+                <CardTitle>Service Status</CardTitle>
+                <CardDescription>Test and verify integrations</CardDescription>
+              </div>
+              <Button onClick={testAll} variant="outline" size="sm">Test All</Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {services.map((service) => (
@@ -168,41 +160,42 @@ export default function SetupPage() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Setup Instructions</CardTitle>
-              <CardDescription>Follow these steps to complete your setup</CardDescription>
+              <CardDescription>Follow these steps to complete configuration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* IBM Watsonx */}
               <div>
-                <h3 className="font-semibold mb-2">1. IBM Watsonx (Required)</h3>
+                <h3 className="font-semibold mb-2">1. IBM Watsonx</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Your API key is already configured. You'll also need a Project ID from IBM Cloud.
-                </p>
-                <div className="flex items-center space-x-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="https://cloud.ibm.com/catalog/services/watson-machine-learning" target="_blank">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Get Project ID
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">2. Pinecone (Optional)</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  For advanced student analytics and personalized recommendations.
+                  Already configured. You also need a Project ID from IBM Cloud.
                 </p>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="https://www.pinecone.io/" target="_blank">
+                  <Link href="https://cloud.ibm.com/catalog/services/watson-machine-learning" target="_blank">
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Sign up for Pinecone
+                    Get Project ID
                   </Link>
                 </Button>
               </div>
 
+              {/* Pinecone */}
+              <div>
+                <h3 className="font-semibold mb-2">2. Pinecone (Optional)</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Enables vector search for recommendations.
+                </p>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="https://www.pinecone.io/" target="_blank">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Pinecone Dashboard
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Google Classroom */}
               <div>
                 <h3 className="font-semibold mb-2">3. Google Classroom (Optional)</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  For seamless integration with Google Classroom.
+                  Integrate with your school’s Google Classroom workspace.
                 </p>
                 <Button asChild variant="outline" size="sm">
                   <Link href="https://console.developers.google.com/" target="_blank">
@@ -214,22 +207,19 @@ export default function SetupPage() {
             </CardContent>
           </Card>
 
-          {/* Next Steps */}
+          {/* Start App Section */}
           <Card>
             <CardHeader>
               <CardTitle>Ready to Start!</CardTitle>
-              <CardDescription>Your EduTutor AI platform is ready to use</CardDescription>
+              <CardDescription>Your EduTutor AI is now ready to use</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
+                <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                   <Link href="/student">Start Learning</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/student/quiz-generator">Generate Your First Quiz</Link>
+                  <Link href="/student/quiz-generator">Generate a Quiz</Link>
                 </Button>
                 <Button asChild variant="outline">
                   <Link href="/educator">Educator Dashboard</Link>

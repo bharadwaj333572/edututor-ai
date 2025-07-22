@@ -31,7 +31,7 @@ This project was developed as part of the **SmartInternz "Generative AI with IBM
 ## 📄 Project Documents
 
 - [📝 EduTutor AI Project Report (.docx)](https://github.com/bharadwaj333572/edututor-ai/blob/940822265af75d80b77a7e8fe5890a41f79120b1/documents/EduTutor%20AI%20Project%20Report.docx)
-- [📘 EduTutor AI Project Report (.pdf)]
+- [📘 EduTutor AI Project Report (.pdf)](https://github.com/bharadwaj333572/edututor-ai/blob/2b5992989575e2de834a81028af0d2bb336dac22/documents/EduTutor%20AI%20Project%20Report.pdf)
 
 ## 📹 Demo Video
 
